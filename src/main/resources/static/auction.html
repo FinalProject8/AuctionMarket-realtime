@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>실시간 경매방</title>
+</head>
+<body>
+<h2>경매방 #1</h2>
+<input type="text" id="username" placeholder="익명 이름 입력" />
+<input type="number" id="amount" placeholder="입찰가 입력" />
+<button onclick="sendBid()">입찰</button>
+
+<ul id="messages"></ul>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script>
+    const socket = new SockJS("/ws-stomp");
+    const stompClient = Stomp.over(socket);
+    const auctionId = 1;
+
+    stompClient.connect({}, function () {
+        // 입찰 수신
+        stompClient.subscribe(`/topic/auction/${auctionId}`, function (message) {
+            const bid = JSON.parse(message.body);
+            const li = document.createElement("li");
+            li.innerText = `${bid.username}님이 ${bid.amount}원 입찰!`;
+            document.getElementById("messages").appendChild(li);
+        });
+
+        // 에러 수신
+        stompClient.subscribe("/user/queue/errors", function (error) {
+            alert("❌ 에러: " + error.body);
+        });
+    });
+
+    function sendBid() {
+        const username = document.getElementById("username").value;
+        const amount = document.getElementById("amount").value;
+
+        const bid = {
+            username: username,
+            amount: parseInt(amount)
+        };
+
+        stompClient.send(`/app/auction/${auctionId}/bid`, {}, JSON.stringify(bid));
+    }
+</script>
+</body>
+</html>
