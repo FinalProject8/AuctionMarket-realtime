@@ -20,14 +20,19 @@ public class BidService {
     private final BidRepository bidRepository;
     private final AuctionRepository auctionRepository;
 
-    private final Duration enterLimit = Duration.ofMinutes(10);
-
     @Transactional
     public BidMessage placeBid(
             Long auctionId,
             BidMessage bidMessage) {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new RuntimeException("Auction not found"));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (auction.getEndTime().isBefore(now)) {
+            log.warn("경매 종료됨 : 입찰거부");
+            throw new RuntimeException("경매가 이미 종료되었습니다");
+        }
 
         Long currentTopPrice = auction.getTopPrice();
         Long newBidAmount = bidMessage.getAmount();
