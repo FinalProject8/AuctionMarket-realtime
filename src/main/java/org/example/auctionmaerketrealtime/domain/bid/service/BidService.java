@@ -2,6 +2,7 @@ package org.example.auctionmaerketrealtime.domain.bid.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.auctionmaerketrealtime.common.redis.config.AuctionRedisService;
 import org.example.auctionmaerketrealtime.domain.auction.entity.Auction;
 import org.example.auctionmaerketrealtime.domain.auction.repository.AuctionRepository;
 import org.example.auctionmaerketrealtime.domain.bid.entity.Bid;
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
 public class BidService {
     private final BidRepository bidRepository;
     private final AuctionRepository auctionRepository;
+    private final AuctionRedisService auctionRedisService;
 
     @Transactional
     public BidMessage placeBid(
@@ -55,6 +57,8 @@ public class BidService {
 
         auction.setTopPrice(newBidAmount);
         auctionRepository.save(auction);
+
+        auctionRedisService.saveTopBid(auctionId, bidMessage.getUsername(), bidMessage.getAmount());
 
         log.info("✅ 입찰 저장 완료! DB에 반영");
         return bidMessage;

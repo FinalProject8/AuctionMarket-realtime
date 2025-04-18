@@ -44,12 +44,30 @@
 <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 <script>
+    // // 1️⃣ URL에서 auctionId 받아오기
+    // const urlParams = new URLSearchParams(window.location.search);
+    // const auctionId = urlParams.get("auctionId");
+    // console.log("🔍 URL에서 받은 auctionId:", auctionId);
+    //
+    // if (!auctionId) {
+    //     alert("경매 ID가 URL에 없습니다.");
+    //     throw new Error("auctionId is missing from URL.");
+    // }
+
+    // 2️⃣ 소켓 연결
     const socket = new SockJS("/ws-stomp");
     const stompClient = Stomp.over(socket);
     const auctionId = 1;
 
     stompClient.connect({}, function () {
-        // 입찰 수신
+        console.log("✅ 웹소켓 연결 성공!");
+
+        // 3️⃣ 입장 요청
+        const username = document.getElementById("username").value;
+        stompClient.send(`/pub/auction/${auctionId}/enter`, {}, JSON.stringify({ username }));
+        console.log("🚪 입장 요청 전송됨");
+
+        // 4️⃣ 입찰 수신
         stompClient.subscribe(`/topic/auction/${auctionId}`, function (message) {
             const bid = JSON.parse(message.body);
             const li = document.createElement("li");
@@ -57,12 +75,12 @@
             document.getElementById("messages").appendChild(li);
         });
 
-        // 에러 수신
+        // 5️⃣ 에러 수신
         stompClient.subscribe("/user/queue/errors", function (error) {
             alert("❌ 에러: " + error.body);
         });
 
-        // 낙찰자 결제 요청 수신
+        // 6️⃣ 낙찰자 결제 요청 수신
         stompClient.subscribe("/user/queue/bid-result", function (message) {
             const data = JSON.parse(message.body);
             if (data.type === "WINNER") {
@@ -71,18 +89,28 @@
         });
     });
 
+    // 7️⃣ 입찰 전송
     function sendBid() {
         const username = document.getElementById("username").value;
         const amount = document.getElementById("amount").value;
+
+        console.log("📤 입찰 요청:", username, amount);
+
+        if (!username || !amount) {
+            alert("닉네임과 입찰가를 입력해주세요.");
+            return;
+        }
 
         const bid = {
             username: username,
             amount: parseInt(amount)
         };
 
-        stompClient.send(`/app/auction/${auctionId}/bid`, {}, JSON.stringify(bid));
+        stompClient.send(`/pub/auction/${auctionId}/bid`, {}, JSON.stringify(bid));
+        console.log("📤 입찰 전송됨:", bid);
     }
 
+    // 8️⃣ 결제 모달 관련 함수
     function showPaymentModal(amount) {
         document.getElementById("overlay").style.display = "block";
         document.getElementById("paymentModal").style.display = "block";
