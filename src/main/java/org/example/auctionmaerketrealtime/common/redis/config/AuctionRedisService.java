@@ -6,12 +6,13 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class AuctionRedisService {
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     public void saveAuctionRoomWithTTL(Long auctionId, Duration ttl) {
         String key = "auction:room" + auctionId;
@@ -24,18 +25,20 @@ public class AuctionRedisService {
 
     public void saveTopBid(Long auctionId, String username, Long amount) {
         String key = "auction:top:" + auctionId;
-        Map<String, Object> data = new HashMap<>();
-        data.put("username", username);
-        data.put("amount", amount);
-
-        redisTemplate.opsForHash().putAll(key, data);
+//        Map<String, Object> data = new HashMap<>();
+//        data.put("amount", amount);
+//        data.put("username", username);
+//
+//        redisTemplate.opsForHash().putAll(key, data);
+        redisTemplate.opsForHash().put(key, "amount", String.valueOf(amount));
+        redisTemplate.opsForHash().put(key, "username", username);
 
         System.out.println("redis 저장 키: " + key);
         System.out.println("username: " + username + " amount: " + amount);
     }
 
-    public Map<Object, Object> getTopBid(Long auctionId) {
+    public /*Map<Object, Object>*/List<Object> getTopBid(Long auctionId) {
         String key = "auction:top:" + auctionId;
-        return redisTemplate.opsForHash().entries(key);
+        return redisTemplate.opsForHash().values(key).stream().toList();
     }
 }
