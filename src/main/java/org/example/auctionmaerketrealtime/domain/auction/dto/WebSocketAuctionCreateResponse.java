@@ -4,18 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
+@AllArgsConstructor
 public class WebSocketAuctionCreateResponse {
     private String websocketUrl;
-
-    public WebSocketAuctionCreateResponse(String websocketUrl) {
-        this.websocketUrl = websocketUrl;
-    }
-
-    public String getWebsocketUrl() {
-        return websocketUrl;
-    }
-
-    public void setWebsocketUrl(String websocketUrl) {
-        this.websocketUrl = websocketUrl;
-    }
 }

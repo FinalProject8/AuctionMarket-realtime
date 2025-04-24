@@ -11,7 +11,6 @@ import org.example.auctionmaerketrealtime.websocket.BidMessage;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -26,10 +25,16 @@ public class BidService {
     public BidMessage placeBid(
             Long auctionId,
             BidMessage bidMessage) {
+        log.info("Place bid for auctionId {}, username {}, amount {}", auctionId, bidMessage.getUsername(), bidMessage.getAmount());
         Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new RuntimeException("Auction not found"));
+                .orElseThrow(() -> new RuntimeException("경매를 찾을 수 없습니다"));
 
         LocalDateTime now = LocalDateTime.now();
+
+        if (auction.getStartTime().isAfter(now)) {
+            log.warn("경매 시작전: 입찰 거부");
+            throw new RuntimeException("경매가 아직 시작하지 않았습니다");
+        }
 
         if (auction.getEndTime().isBefore(now)) {
             log.warn("경매 종료됨 : 입찰거부");
@@ -43,7 +48,7 @@ public class BidService {
 
         if (bidMessage.getAmount() <= auction.getTopPrice()) {
             log.warn("❌ 입찰가가 최고가 이하입니다. 저장하지 않음");
-            throw new RuntimeException("Top price exceeded");
+            throw new RuntimeException("현재 최고가보다 낮아 입찰할 수 없습니다");
         }
 
         // 입찰 저장

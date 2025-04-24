@@ -18,6 +18,7 @@ public class AuctionStompController {
     private final BidService bidService;
     private final SimpMessagingTemplate messagingTemplate;
 
+    // 유저 입찰
     @MessageMapping("/auction/{auctionId}/bid")
     public void handleBid(@DestinationVariable Long auctionId, BidMessage bidMessage) {
         log.info("💾 입찰 저장: {}님 {}원 (경매 {})", bidMessage.getUsername(), bidMessage.getAmount(), auctionId);
@@ -26,6 +27,4 @@ public class AuctionStompController {
 
         messagingTemplate.convertAndSend("/topic/auction/" + auctionId, save);
     }
-
-
 }

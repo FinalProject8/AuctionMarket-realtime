@@ -7,6 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class AuctionEndMessage {
     private Long auctionId;
+    private String winnerName;
     private Long amount;
     private String comment;
 }

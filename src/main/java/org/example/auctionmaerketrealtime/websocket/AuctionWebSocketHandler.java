@@ -9,9 +9,6 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class AuctionWebSocketHandler extends TextWebSocketHandler {
     private final Map<String, Set<WebSocketSession>> auctionSessions = new ConcurrentHashMap<>();
-//    private final Set<WebSocketSession> sessions = new HashSet<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -30,9 +26,6 @@ public class AuctionWebSocketHandler extends TextWebSocketHandler {
                 .add(session);
 
         System.out.println("[접속] " + session.getId() +  "님이 " + auctionId + "경매방에 입장했습니다");
-//        sessions.add(session);
-
-//        System.out.println(session.getId() + "님이 연결되었습니다");
     }
 
     @Override
@@ -50,7 +43,6 @@ public class AuctionWebSocketHandler extends TextWebSocketHandler {
             if (connectedSession.isOpen()) {
                 connectedSession.sendMessage(new TextMessage("입찰가 : " + payload + '원'));
             }
-//            connectedSession.sendMessage(new TextMessage("입찰가 :" + payload + "원"));
         }
     }
 
@@ -67,9 +59,6 @@ public class AuctionWebSocketHandler extends TextWebSocketHandler {
                 auctionSessions.remove(auctionId);
             }
         }
-//        sessions.remove(session);
-//
-//        System.out.println(session.getId() + "님의 연결이 해제되었습니다");
     }
 
     private String extractAuctionId(WebSocketSession session) {

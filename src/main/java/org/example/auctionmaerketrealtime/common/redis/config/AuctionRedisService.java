@@ -14,14 +14,14 @@ import java.util.Map;
 public class AuctionRedisService {
     private final RedisTemplate<String, String> redisTemplate;
 
-    public void saveAuctionRoomWithTTL(Long auctionId, Duration ttl) {
-        String key = "auction:room" + auctionId;
-        redisTemplate.opsForValue().set(key,"ACTIVE", ttl);
-    }
-
-    public boolean isAuctionRoomActive(Long auctionId) {
-        return Boolean.TRUE.equals(redisTemplate.hasKey("auction:room" + auctionId));
-    }
+//    public void saveAuctionRoomWithTTL(Long auctionId, Duration ttl) {
+//        String key = "auction:room" + auctionId;
+//        redisTemplate.opsForValue().set(key,"ACTIVE", ttl);
+//    }
+//
+//    public boolean isAuctionRoomActive(Long auctionId) {
+//        return Boolean.TRUE.equals(redisTemplate.hasKey("auction:room" + auctionId));
+//    }
 
     public void saveTopBid(Long auctionId, String username, Long amount) {
         String key = "auction:top:" + auctionId;
@@ -37,8 +37,8 @@ public class AuctionRedisService {
         System.out.println("username: " + username + " amount: " + amount);
     }
 
-    public /*Map<Object, Object>*/List<Object> getTopBid(Long auctionId) {
-        String key = "auction:top:" + auctionId;
-        return redisTemplate.opsForHash().values(key).stream().toList();
-    }
+//    public /*Map<Object, Object>*/List<Object> getTopBid(Long auctionId) {
+//        String key = "auction:top:" + auctionId;
+//        return redisTemplate.opsForHash().values(key).stream().toList();
+//    }
 }

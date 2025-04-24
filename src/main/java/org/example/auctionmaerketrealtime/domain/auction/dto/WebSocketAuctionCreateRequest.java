@@ -9,5 +9,6 @@ public class WebSocketAuctionCreateRequest {
     private Long auctionId;
     private String productName;
     private Long minPrice;
+    private LocalDateTime startTime;
     private LocalDateTime endTime;
 }

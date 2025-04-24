@@ -17,32 +17,19 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class AuctionEndService {
-    private final AuctionRepository auctionRepository;
+
     private final BidRepository bidRepository;
-    private final SimpMessagingTemplate messagingTemplate;
 
-    public void endAuction(Long auctionId) {
-        Auction auction = auctionRepository.findById(auctionId)
-                .orElseThrow(() -> new RuntimeException("Auction not found"));
+    public AuctionEndMessage getWinnerInfo(Long auctionId) {
+        log.info(" 낙찰자 조회 서비스 진입 auction {}", auctionId);
+        Bid winner = bidRepository.findTopByAuctionIdOrderByIdDesc(auctionId)
+                .orElse(null);
 
-        if (auction.getStatus() == AuctionStatus.ENDED) {
-            log.info("경매 {}는 이미 종료된 상태입니다", auctionId);
-            return;
+        if (winner == null) {
+            log.info("입찰이 존재하지 않아 낙찰자가 없습니다");
+            return new AuctionEndMessage(auctionId, null, null,"입찰이 존재하지 않아 낙찰자가 없습니다");
         }
-        auction.end();
-        auctionRepository.save(auction);
-
-        Optional<Bid> bidUser = bidRepository.findTopByAuctionIdOrderByIdDesc(auctionId);
-
-        if (bidUser.isPresent()) {
-            Bid winner = bidUser.get();
-            log.info("경매 {} 종료 ! 낙찰자 : {}, 금액: {}", auctionId, winner.getUsername(), winner.getAmount());
-            messagingTemplate.convertAndSendToUser(
-                    winner.getUsername(),
-                    "/queue/bid-result/",
-                    new AuctionEndMessage(auctionId, winner.getAmount(), "낙찰 되셨습니다! 결제를 진행해주세요"));
-        } else {
-            log.info("경매 {} 종료! 입찰자가 없어 낙찰자가 존재하지 않습니다", auctionId);
-        }
+        log.info("낙찰자 정보 auctionId: {}, winner: {}", auctionId, winner);
+        return new AuctionEndMessage(auctionId, winner.getUsername(), winner.getAmount(), "낙찰 되셨습니다! 결제를 진행해주세요");
     }
 }
