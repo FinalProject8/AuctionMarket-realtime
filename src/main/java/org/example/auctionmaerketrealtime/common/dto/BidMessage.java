@@ -1,4 +1,4 @@
-package org.example.auctionmaerketrealtime.websocket;
+package org.example.auctionmaerketrealtime.common.dto;
 
 import lombok.*;
 
@@ -8,6 +8,9 @@ import lombok.*;
 @AllArgsConstructor
 @ToString
 public class BidMessage {
+    private Long auctionId;
+    private Long consumerId;
     private String username;
     private Long amount;
+    private String type;
 }

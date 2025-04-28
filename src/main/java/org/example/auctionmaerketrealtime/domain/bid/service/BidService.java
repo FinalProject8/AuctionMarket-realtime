@@ -2,12 +2,13 @@ package org.example.auctionmaerketrealtime.domain.bid.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.auctionmaerketrealtime.common.redis.config.AuctionRedisService;
+import org.example.auctionmaerketrealtime.common.handler.AuctionRedisHandler;
 import org.example.auctionmaerketrealtime.domain.auction.entity.Auction;
 import org.example.auctionmaerketrealtime.domain.auction.repository.AuctionRepository;
 import org.example.auctionmaerketrealtime.domain.bid.entity.Bid;
 import org.example.auctionmaerketrealtime.domain.bid.repository.BidRepository;
-import org.example.auctionmaerketrealtime.websocket.BidMessage;
+import org.example.auctionmaerketrealtime.common.dto.BidMessage;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +20,8 @@ import java.time.LocalDateTime;
 public class BidService {
     private final BidRepository bidRepository;
     private final AuctionRepository auctionRepository;
-    private final AuctionRedisService auctionRedisService;
+    private final AuctionRedisHandler auctionRedisHandler;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Transactional
     public BidMessage placeBid(
@@ -53,6 +55,7 @@ public class BidService {
 
         // 입찰 저장
         Bid bid = Bid.builder()
+                .consumerId(bidMessage.getConsumerId())
                 .username(bidMessage.getUsername())
                 .amount(bidMessage.getAmount())
                 .auction(auction)
@@ -63,9 +66,12 @@ public class BidService {
         auction.setTopPrice(newBidAmount);
         auctionRepository.save(auction);
 
-        auctionRedisService.saveTopBid(auctionId, bidMessage.getUsername(), bidMessage.getAmount());
+        auctionRedisHandler.saveTopBid(auctionId, bidMessage.getUsername(), bidMessage.getAmount(), auction.getEndTime());
 
         log.info("✅ 입찰 저장 완료! DB에 반영");
+        redisTemplate.convertAndSend("auction:bid:" + auctionId, bidMessage);
+        log.info("서버간 입찰가 전송 완료");
         return bidMessage;
     }
+
 }

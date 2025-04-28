@@ -1,6 +1,10 @@
-package org.example.auctionmaerketrealtime.websocket;
+package org.example.auctionmaerketrealtime.common.handler;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.auctionmaerketrealtime.common.dto.BidMessage;
+import org.example.auctionmaerketrealtime.common.listener.BidMessageListener;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -9,19 +13,19 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class AuctionWebSocketHandler extends TextWebSocketHandler {
-    private final Map<String, Set<WebSocketSession>> auctionSessions = new ConcurrentHashMap<>();
+    private final RedisTemplate<String, Object> redisPubSubTemplate;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
         String auctionId = extractAuctionId(session);
-        auctionSessions
+        BidMessageListener.auctionSessions
                 .computeIfAbsent(auctionId, k -> ConcurrentHashMap.newKeySet())
                 .add(session);
 
@@ -34,29 +38,38 @@ public class AuctionWebSocketHandler extends TextWebSocketHandler {
         String auctionId = extractAuctionId(session);
 
         if (!payload.matches("\\d+")) {
-            session.sendMessage(new TextMessage("잘못된 입찰가입니다. 숫자만 입력하세요"));
+            try {
+                session.sendMessage(new TextMessage("잘못된 입찰가입니다. 숫자만 입력하세요"));
+            } catch (IOException e) {
+                log.warn("메세지 전송 실패", e);
+            }
             return;
         }
 
-        Set<WebSocketSession> sessions = auctionSessions.getOrDefault(auctionId, Set.of());
-        for (WebSocketSession connectedSession : sessions) {
-            if (connectedSession.isOpen()) {
-                connectedSession.sendMessage(new TextMessage("입찰가 : " + payload + '원'));
-            }
+        try {
+            BidMessage bidMessage = new BidMessage();
+            bidMessage.setAuctionId(Long.parseLong(auctionId));
+            bidMessage.setAmount(Long.parseLong(payload));
+            bidMessage.setUsername("익명");
+
+            redisPubSubTemplate.convertAndSend("auction:bid", bidMessage);
+            log.info("[Redis 입찰 발행] {}원 - 경매: {}", bidMessage.getAmount(), auctionId);
+        } catch (Exception e) {
+            log.error("입찰 처리 중 예외 발생", e);
         }
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         String auctionId = extractAuctionId(session);
-        Set<WebSocketSession> sessions = auctionSessions.get(auctionId);
+        Set<WebSocketSession> sessions = BidMessageListener.auctionSessions.get(auctionId);
 
         if (sessions != null) {
             sessions.remove(session);
             System.out.println("[퇴장] " + session.getId() + "님이 " + auctionId + "경매방에서 나갔습니다");
 
             if (sessions.isEmpty()) {
-                auctionSessions.remove(auctionId);
+                BidMessageListener.auctionSessions.remove(auctionId);
             }
         }
     }

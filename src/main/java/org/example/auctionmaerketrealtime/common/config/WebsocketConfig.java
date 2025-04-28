@@ -1,4 +1,4 @@
-package org.example.auctionmaerketrealtime.websocket.config;
+package org.example.auctionmaerketrealtime.common.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -23,6 +23,5 @@ public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
         config.setApplicationDestinationPrefixes("/pub"); // client > server 요청 들어올 prefix 경로
         // client 는 아래에서 지정한 prefix 를 시작으로 경로를 구독 해야한다
         config.enableSimpleBroker("/topic", "queue"); // client 가 구독(sub)할 prefix 경로
-
     }
 }

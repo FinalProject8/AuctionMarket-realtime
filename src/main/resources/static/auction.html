@@ -52,12 +52,13 @@
 <script>
     const urlParams = new URLSearchParams(window.location.search);
     const auctionId = parseInt(urlParams.get("auctionId"));
+    const consumerId = parseInt(urlParams.get("consumerId"));
     const username = urlParams.get("nickname");
 
     const chatBox = document.getElementById("chatBox");
 
-    if (!auctionId || !username) {
-        alert("URL에 auctionId 또는 nickname이 없습니다.");
+    if (!auctionId || !username || !consumerId) {
+        alert("URL에 auctionId, consumerId 또는 nickname이 없습니다.");
         throw new Error("auctionId 또는 nickname이 누락됨");
     }
 
@@ -67,12 +68,19 @@
     stompClient.connect({}, function () {
         console.log("✅ 웹소켓 연결 성공");
 
-        stompClient.send(`/pub/auction/${auctionId}/enter`, {}, JSON.stringify({ username }));
-        addMessage(`${username}님이 경매방에 입장하셨습니다.`);
+        stompClient.send(`/pub/auction/${auctionId}/enter`, {}, JSON.stringify({
+            username: username,
+            consumerId: consumerId
+        }));
 
         stompClient.subscribe(`/topic/auction/${auctionId}`, function (message) {
-            const bid = JSON.parse(message.body);
-            addMessage(`${bid.username}님이 ${bid.amount}원 입찰!`);
+            const data = JSON.parse(message.body);
+
+            if (data.type === "ENTER") {
+                addMessage(`${data.username}님이 경매방에 입장하셨습니다.`);
+            } else if (data.type === "BID") {
+                addMessage(`${data.username}님이 ${data.amount}원 입찰!`);
+            }
         });
 
         stompClient.subscribe("/user/queue/errors", function (error) {

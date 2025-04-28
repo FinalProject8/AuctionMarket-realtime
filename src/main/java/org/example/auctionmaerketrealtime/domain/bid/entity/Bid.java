@@ -1,10 +1,7 @@
 package org.example.auctionmaerketrealtime.domain.bid.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.example.auctionmaerketrealtime.domain.auction.entity.Auction;
 
 import java.time.LocalDateTime;
@@ -20,6 +17,7 @@ public class Bid {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private Long consumerId;
     private String username;
     private Long amount;
 

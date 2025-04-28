@@ -1,4 +1,4 @@
-package org.example.auctionmaerketrealtime.domain.auction;
+package org.example.auctionmaerketrealtime.domain.auction.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,7 +7,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class AuctionEndMessage {
     private Long auctionId;
-    private String winnerName;
+    private Long consumerId;
     private Long amount;
-    private String comment;
 }
