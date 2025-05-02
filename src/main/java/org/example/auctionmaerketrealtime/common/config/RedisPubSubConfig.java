@@ -26,7 +26,6 @@ public class RedisPubSubConfig {
         return container;
     }
 
-
     @Bean
     public RedisTemplate<String, Object> redisPubSubTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();

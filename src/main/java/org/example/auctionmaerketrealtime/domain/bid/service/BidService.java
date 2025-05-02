@@ -73,5 +73,4 @@ public class BidService {
         log.info("서버간 입찰가 전송 완료");
         return bidMessage;
     }
-
 }
