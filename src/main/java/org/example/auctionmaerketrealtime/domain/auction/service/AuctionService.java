@@ -2,7 +2,9 @@ package org.example.auctionmaerketrealtime.domain.auction.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.auctionmaerketrealtime.common.general.AuctionUrlGeneral;
 import org.example.auctionmaerketrealtime.domain.auction.dto.WebSocketAuctionCreateRequest;
+import org.example.auctionmaerketrealtime.domain.auction.dto.WebSocketAuctionCreateResponse;
 import org.example.auctionmaerketrealtime.domain.auction.entity.Auction;
 import org.example.auctionmaerketrealtime.domain.auction.enums.AuctionStatus;
 import org.example.auctionmaerketrealtime.domain.auction.repository.AuctionRepository;
@@ -17,19 +19,41 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class AuctionService {
     private final AuctionRepository auctionRepository;
+    private final AuctionUrlGeneral auctionUrlGeneral;
     private final StringRedisTemplate stringRedisTemplate;
 
-    // 경매방 종료시간 Redis TTL 로 설정
-    public void createAuction(WebSocketAuctionCreateRequest request) {
-        Long auctionId = request.getAuctionId();
+    // 경매방 생성
+    public WebSocketAuctionCreateResponse createAuction(WebSocketAuctionCreateRequest request) {
+        validateAuction(request.getAuctionId());
 
+        Auction auction = saveAuction(request);
+        setAuctionEndTimeTTL(auction.getId(), request.getEndTime());
+
+        String roomUrl = auctionUrlGeneral.generateRoomUrl(auction.getId());
+        return new WebSocketAuctionCreateResponse(roomUrl);
+    }
+
+    // 유저별 입장 링크 생성
+    public WebSocketAuctionCreateResponse generateJoinUrl(WebSocketAuctionCreateRequest request) {
+        String joinUrl = auctionUrlGeneral.generateJoinUrl(
+                request.getAuctionId(),
+                request.getConsumerId(),
+                request.getNickName()
+        );
+        return new WebSocketAuctionCreateResponse(joinUrl);
+    }
+
+    // 경매 유효 체크
+    private void validateAuction(Long auctionId) {
         if (auctionRepository.existsById(auctionId)) {
-            log.error("{} 경매가 이미 존재합니다 ", auctionId);
-            return;
+            throw new IllegalArgumentException("이미 존재하는 경매 ID입니다: " + auctionId);
         }
+    }
 
+    // 경매 생성
+    private Auction saveAuction(WebSocketAuctionCreateRequest request) {
         Auction auction = Auction.builder()
-                .id(auctionId)
+                .id(request.getAuctionId())
                 .title(request.getProductName())
                 .topPrice(request.getMinPrice())
                 .startTime(request.getStartTime())
@@ -37,16 +61,20 @@ public class AuctionService {
                 .status(AuctionStatus.PROGRESS)
                 .build();
 
-        auctionRepository.save(auction);
+        return auctionRepository.save(auction);
+    }
 
-        long endDelay = Duration.between(LocalDateTime.now(), request.getEndTime()).toMinutes();
-
-        if (endDelay <= 0) endDelay = 5;
+    // 경매 종료 TTL 지정
+    private void setAuctionEndTimeTTL(Long auctionId, LocalDateTime endTime) {
+        long minutes = Duration.between(LocalDateTime.now(), endTime).toMinutes();
+        if (minutes <= 0) minutes = 5;
 
         stringRedisTemplate.opsForValue().set(
-                "auction:end:" + auction.getId(),
-                "end", Duration.ofMinutes(endDelay));
+                "auction:end:" + auctionId,
+                "end",
+                Duration.ofMinutes(minutes)
+        );
 
-        log.info("Redis TTL 등록: endTime {}분", endDelay);
+        log.info("Redis TTL 등록: auctionId={}, TTL={}분", auctionId, minutes);
     }
 }

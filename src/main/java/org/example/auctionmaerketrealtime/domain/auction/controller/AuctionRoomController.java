@@ -22,28 +22,21 @@ public class AuctionRoomController {
 
     // 경매방 생성
     @PostMapping("/start")
-    public ResponseEntity<WebSocketAuctionCreateResponse> startAuctionRoom(
-            @RequestBody WebSocketAuctionCreateRequest request) {
-        auctionService.createAuction(request);
+    public ResponseEntity<WebSocketAuctionCreateResponse> startAuctionRoom(@RequestBody WebSocketAuctionCreateRequest request) {
+        WebSocketAuctionCreateResponse response = auctionService.createAuction(request);
 
-        String roomUrl = "http://localhost:8081/auction.html?auctionId=" + request.getAuctionId();
+        log.info("경매방 생성완료 : {}", response.getWebsocketUrl());
 
-        log.info("경매방 생성완료 : {}", roomUrl);
-
-        WebSocketAuctionCreateResponse response = new WebSocketAuctionCreateResponse(roomUrl);
         return ResponseEntity.ok(response);
     }
 
     // 유저별 입장 html 생성
     @PostMapping("/join")
     public ResponseEntity<WebSocketAuctionCreateResponse> joinAuctionRoom(@RequestBody WebSocketAuctionCreateRequest request) {
-        Long auctionId = request.getAuctionId();
-        Long consumerId = request.getConsumerId();
-        String nickName = request.getNickName();
+        WebSocketAuctionCreateResponse response = auctionService.generateJoinUrl(request);
 
-        String roomUrl = "http://localhost:8081/auction.html?auctionId=" + auctionId +"&consumerId="+ consumerId +"&nickname=" + nickName;
-        log.info("참여용 경매 링크 생성: {}", roomUrl);
+        log.info("참여용 경매 링크 생성: {}", response.getWebsocketUrl());
 
-        return ResponseEntity.ok(new WebSocketAuctionCreateResponse(roomUrl));
+        return ResponseEntity.ok(response);
     }
 }
