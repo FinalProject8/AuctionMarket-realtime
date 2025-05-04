@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,6 +29,10 @@ public class Auction {
     @Enumerated(EnumType.STRING)
     @Column(name = "Auction_Status")
     private AuctionStatus status;
+
+    public void updateTopPrice(Long newTopPrice) {
+        this.topPrice = newTopPrice;
+    }
 
     public void end() {
         this.status = AuctionStatus.ENDED;
