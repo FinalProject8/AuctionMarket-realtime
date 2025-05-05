@@ -1,12 +1,13 @@
 package org.example.auctionmaerketrealtime.domain.auction.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.example.auctionmaerketrealtime.common.general.AuctionUrlGeneral;
 import org.example.auctionmaerketrealtime.domain.auction.dto.WebSocketAuctionCreateRequest;
 import org.example.auctionmaerketrealtime.domain.auction.dto.WebSocketAuctionCreateResponse;
 import org.example.auctionmaerketrealtime.domain.auction.entity.Auction;
 import org.example.auctionmaerketrealtime.domain.auction.enums.AuctionStatus;
+import org.example.auctionmaerketrealtime.domain.auction.exception.AuctionErrorCode;
+import org.example.auctionmaerketrealtime.domain.auction.exception.AuctionException;
 import org.example.auctionmaerketrealtime.domain.auction.repository.AuctionRepository;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuctionService {
@@ -46,7 +46,7 @@ public class AuctionService {
     // 경매 유효 체크
     private void validateAuction(Long auctionId) {
         if (auctionRepository.existsById(auctionId)) {
-            throw new IllegalArgumentException("이미 존재하는 경매 ID입니다: " + auctionId);
+            throw new AuctionException(AuctionErrorCode.AUCTION_ALREADY_EXISTS);
         }
     }
 
@@ -60,7 +60,6 @@ public class AuctionService {
                 .endTime(request.getEndTime())
                 .status(AuctionStatus.PROGRESS)
                 .build();
-
         return auctionRepository.save(auction);
     }
 
@@ -74,7 +73,5 @@ public class AuctionService {
                 "end",
                 Duration.ofMinutes(minutes)
         );
-
-        log.info("Redis TTL 등록: auctionId={}, TTL={}분", auctionId, minutes);
     }
 }

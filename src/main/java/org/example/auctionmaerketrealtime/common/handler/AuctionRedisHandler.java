@@ -28,5 +28,4 @@ public class AuctionRedisHandler {
         System.out.println("redis 저장 키: " + key);
         System.out.println("username: " + username + " amount: " + amount);
     }
-
 }
