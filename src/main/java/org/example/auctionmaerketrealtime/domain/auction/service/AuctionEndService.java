@@ -45,7 +45,7 @@ public class AuctionEndService {
                 .uri("/v1/auctions/end")
                 .bodyValue(auctionEndMessage)
                 .retrieve()
-                .bodyToMono(AuctionEndMessage.class)
+                .bodyToMono(Void.class)
                 .subscribe();
     }
 }

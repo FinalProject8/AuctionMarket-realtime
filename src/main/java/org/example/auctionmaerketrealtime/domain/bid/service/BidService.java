@@ -59,7 +59,7 @@ public class BidService {
         auction.updateTopPrice(newBidAmount);
         auctionRepository.save(auction);
 
-        auctionRedisHandler.saveTopBid(auctionId, bidMessage.getUsername(), bidMessage.getAmount(), auction.getEndTime());
+        auctionRedisHandler.saveTopBid(auctionId, bidMessage.getUsername(), bidMessage.getConsumerId(), bidMessage.getAmount(), auction.getEndTime());
 
         redisTemplate.convertAndSend("auction:bid:" + auctionId, bidMessage);
 

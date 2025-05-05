@@ -10,7 +10,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/auction/{auctionId}")
 @RequiredArgsConstructor
 public class AuctionStompController {
 
@@ -18,14 +17,14 @@ public class AuctionStompController {
     private final SimpMessagingTemplate messagingTemplate;
 
     // 유저 입장 메세지
-    @MessageMapping("/enter")
+    @MessageMapping("/auction/{auctionId}/enter")
     public void handleEnter(@DestinationVariable Long auctionId, BidMessage bidMessage) {
         messagingTemplate.convertAndSend("/topic/auction/" + auctionId,
                 bidService.buildEnterMessage(bidMessage));
     }
 
     // 유저 입찰
-    @MessageMapping("/bid")
+    @MessageMapping("/auction/{auctionId}/bid")
     public void handleBid(@DestinationVariable Long auctionId, BidMessage bidMessage) {
         BidMessage save = bidService.placeBid(auctionId, bidMessage);
         messagingTemplate.convertAndSend("/topic/auction/" + auctionId,

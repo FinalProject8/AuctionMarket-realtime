@@ -107,7 +107,7 @@ class BidServiceTest {
         Mockito.when(auctionRepository.findById(auctionId)).thenReturn(Optional.of(auction));
         Mockito.when(bidRepository.save(Mockito.any())).thenAnswer(invocation -> invocation.getArgument(0));
         Mockito.when(auctionRepository.save(Mockito.any())).thenAnswer(invocation -> invocation.getArgument(0));
-        Mockito.doNothing().when(auctionRedisHandler).saveTopBid(Mockito.anyLong(),Mockito.anyString(),Mockito.anyLong(),Mockito.any());
+        Mockito.doNothing().when(auctionRedisHandler).saveTopBid(Mockito.anyLong(),Mockito.anyString(), Mockito.anyLong(),Mockito.anyLong(),Mockito.any());
         Mockito.when(redisTemplate.convertAndSend(anyString(), any())).thenReturn(1L);
 
 

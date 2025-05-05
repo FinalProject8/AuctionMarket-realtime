@@ -12,11 +12,12 @@ import java.time.LocalDateTime;
 public class AuctionRedisHandler {
     private final RedisTemplate<String, String> redisTemplate;
 
-    public void saveTopBid(Long auctionId, String username, Long amount, LocalDateTime auctionEndTime) {
+    public void saveTopBid(Long auctionId, String username, Long amount, Long consumerId, LocalDateTime auctionEndTime) {
         String key = "auction:top:" + auctionId;
 
         redisTemplate.opsForHash().put(key, "amount", String.valueOf(amount));
         redisTemplate.opsForHash().put(key, "username", username);
+        redisTemplate.opsForHash().put(key, "consumerId", String.valueOf(consumerId));
 
         Duration ttl = Duration.between(LocalDateTime.now(), auctionEndTime);
 
@@ -26,6 +27,6 @@ public class AuctionRedisHandler {
         redisTemplate.expire(key, ttl);
 
         System.out.println("redis 저장 키: " + key);
-        System.out.println("username: " + username + " amount: " + amount);
+        System.out.println("username: " + username + " amount: " + amount + " consumerId: " + consumerId);
     }
 }
