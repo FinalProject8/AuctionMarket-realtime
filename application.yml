@@ -1,0 +1,3 @@
+app:
+  auction:
+    base-url: https://YOUR_ALB_DNS_NAME # 기본값 또는 플레이스홀더
